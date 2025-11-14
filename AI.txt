@@ -1,0 +1,263 @@
+import PIL.Image
+from game import game_play
+from Whatsapp import sendMessage
+import pyautogui
+from Dictapp import openappweb
+import datetime
+from SearchNow import searchGoogle
+import pyttsx3
+import speech_recognition
+import requests
+from bs4 import BeautifulSoup
+import os
+import google.generativeai as genai
+import openai
+# from Translator import translategl
+engine = pyttsx3.init("sapi5")
+voices = engine.getProperty("voices")
+engine.setProperty("voice", voices[0].id)
+rate = engine.setProperty("rate",170)
+# Function to control the screen brightness
+def adjust_brightness(query):
+if "increase brightness" in query:
+# Simulate pressing the "Fn + F12" keys to increase brightness
+pyautogui.hotkey('fn', 'f2') # You can modify these if your system uses different keys
+speak("Increasing brightness.")
+pyautogui.sleep(1) # Pause to avoid spamming keys
+elif "decrease brightness" in query:
+# Simulate pressing the "Fn + F11" keys to decrease brightness
+pyautogui.hotkey('fn', 'f3') # Modify this if your system uses different keys
+speak("Decreasing brightness.")
+pyautogui.sleep(1)
+def speak(audio):
+engine.say(audio)
+engine.runAndWait()
+def takeCommand():
+r = speech_recognition.Recognizer()
+with speech_recognition.Microphone() as source:
+print("Listening.....")
+r.pause_threshold = 1
+r.energy_threshold = 300
+audio = r.listen(source,0,4)
+try:
+print("Understanding..")
+query = r.recognize_google(audio,language='en-in')
+11
+print(f"You Said: {query}\n")
+except Exception as e:
+print("Say that again")
+return "None"
+return query
+def alarm(query):
+timehere = open("Alarmtext.txt","a")
+timehere.write(query)
+timehere.close()
+os.startfile("alarm.py")
+import webbrowser
+# Function to search for a song on YouTube and play it
+def playSong(song_name):
+query = song_name + " song" # Adding 'song' to the query for better results
+search_url = f"https://www.youtube.com/results?search_query={query}"
+# Open the YouTube search results page
+webbrowser.open(search_url)
+speak(f"Playing {song_name} for you on YouTube.")
+# Optionally, wait for the user to click on the first result or handle video play with pyautogui if needed.
+# You can integrate pyautogui or selenium to handle video controls like play/pause, volume, etc., after open.
+# Example: pyautogui.press("space") to press space and start the video.
+# You can wait some time to ensure the page has loaded fully before sending the keypress.
+# Function to get weather and temperature based on user input
+def get_weather_info(location):
+search = f"temperature in {location}"
+url = f"https://www.google.com/search?q={search}"
+r = requests.get(url)
+data = BeautifulSoup(r.text, "html.parser")
+# Extracting temperature
+temp = data.find("div", class_="BNeawe iBp4i AP7Wnd")
+if temp:
+temp = temp.text
+else:
+temp = "Not available"
+# Extracting weather condition
+weather = data.find("div", class_="BNeawe tAd8D AP7Wnd")
+if weather:
+weather = weather.text
+else:
+weather = "Not available"
+return temp, weather
+# Initialize the Gemini model (Gemini-1.5 or whatever version you're using)
+def get_answer_from_query(query):
+model = genai.GenerativeModel("gemini-1.5-flash") # Use the appropriate model
+genai.configure(api_key=api_key)
+try:
+prompt = f"Provide a short, concise answer (under 100 words) to the following question: {query}"
+12
+response = model.generate_content(prompt)
+# Extract the text from the response
+answer = response.text.strip()
+if not answer:
+return "Sorry, I couldn't find an answer to that."
+return answer
+except Exception as e:
+print(f"Error: {e}")
+return "Sorry, I couldn't fetch an answer right now."
+def generate_code(query, api_key):
+# Initialize the Generative Model (e.g., gemini-1.5-flash)
+model = genai.GenerativeModel("gemini-1.5-flash") # Use the appropriate model name
+genai.configure(api_key=api_key) # Set the API key for authentication
+try:
+# Prepare the prompt to generate Python code
+prompt = f"Give me only code in Python code for the following task: {query}"
+# Generate content (Python code) using the model
+response = model.generate_content(prompt)
+# Extract the generated code from the response
+generated_code = response.text.strip()
+# If no code is generated, return a fallback message
+if not generated_code:
+return "Sorry, I couldn't generate the code for that task."
+return generated_code
+except Exception as e:
+print(f"Error: {e}")
+return "Sorry, I couldn't generate the code right now."
+# Main loop
+if _name_ == "_main_":
+api_key = "AIzaSyAosXpWbuvwoqQSufXGD9CcC8xTmWJU3vc"
+while True:
+query = takeCommand().lower()
+if "what" in query or "who" in query or "how" in query or "about" in query: # Detects question-like query
+answer = get_answer_from_query(query)
+print(f"{answer}")
+speak(f"Answer: {answer}")
+elif "generate" in query:
+answer = generate_code(query,api_key)
+print(answer)
+elif "open" in query:
+try:
+13
+ ap=query[4:]
+pyautogui.press("super") # Press the "super" key (Windows key)
+pyautogui.sleep(3)
+pyautogui.typewrite(ap) # Type the query (whatever the user said)
+pyautogui.sleep(3)
+pyautogui.press("enter") # Press Enter to open the application
+except:
+pass
+elif "play" in query and "song" in query:
+song_name = query.replace("play", "").replace("song", "").strip()
+if song_name: # If there's a song name mentioned
+playSong(song_name)
+else:
+speak("Sorry, I couldn't find the song name.")
+elif "wake up" in query:
+from GreetMe import greetMe
+greetMe()
+while True:
+query = takeCommand().lower()
+if "go to sleep" in query:
+speak("Ok sir, You can call me anytime.")
+break
+elif "hello" in query:
+speak("Hello sir, how are you?")
+elif "i am fine" in query:
+speak("That's great, sir.")
+elif "how are you" in query:
+speak("Perfect, sir.")
+elif "thank you" in query:
+speak("You are welcome, sir.")
+elif "google" in query:
+searchGoogle(query)
+elif "youtube" in query:
+from SearchNow import searchYoutube
+searchYoutube(query)
+elif "wikipedia" in query:
+from SearchNow import searchWikipedia
+searchWikipedia(query)
+# Handle temperature and weather queries
+if "temperature" in query:
+location = query.replace("temperature in", "").strip() # Extract the location from the query
+if location:
+temp, weather = get_weather_info(location)
+speak(f"Current temperature in {location} is {temp} and the weather is {weather}.")
+else:
+speak("Please specify the location.")
+elif "weather" in query:
+location = query.replace("weather in", "").strip() # Extract the location from the query
+if location:
+14
+temp, weather = get_weather_info(location)
+speak(f"Current weather in {location} is {weather} and the temperature is {temp}.")
+else:
+speak("Please specify the location.")
+elif "the time" in query:
+strTime = datetime.datetime.now().strftime("%H:%M") 
+speak(f"Sir, the time is {strTime}")
+elif "finally sleep" in query:
+speak("Going to sleep, sir.")
+exit()
+elif "open" in query:
+openappweb(query)
+elif "close" in query:
+from Dictapp import closeappweb
+closeappweb(query)
+elif "set an alarm" in query:
+print("Input time example:- 10 and 10 and 10")
+speak("Set the time")
+a = input("Please tell the time: ")
+alarm(a)
+speak("Done, sir.")
+elif "pause" in query:
+pyautogui.press("k")
+speak("Video paused.")
+elif "play" in query:
+pyautogui.press("k")
+speak("Video played.")
+elif "mute" in query:
+pyautogui.press("m")
+speak("Video muted.")
+elif "volume up" in query:
+from keyboard import volumeup
+speak("Turning volume up, sir.")
+volumeup()
+elif "volume down" in query:
+from keyboard import volumedown
+speak("Turning volume down, sir.")
+volumedown()
+elif "remember that" in query:
+rememberMessage = query.replace("remember that", "")
+rememberMessage = query.replace("jarvis", "")
+speak(f"You told me to remember that: {rememberMessage}")
+remember = open("Remember.txt", "a")
+remember.write(rememberMessage)
+remember.close()
+elif "what do you remember" in query:
+remember = open("Remember.txt", "r")
+speak(f"You told me to remember that: {remember.read()}")
+elif "whatsapp" in query:
+sendMessage()
+elif "shutdown the system" in query:
+speak("Are you sure you want to shutdown?")
+shutdown = input("Do you wish to shutdown your computer? (yes/no): ")
+if shutdown == "yes":
+15
+ os.system("shutdown /s /t 1")
+elif shutdown == "no":
+break
+elif "open" in query: # EASY METHOD
+query = query.replace("open", "")
+query = query.replace("jarvis", "")
+pyautogui.press("super")
+pyautogui.typewrite(query)
+pyautogui.sleep(2)
+pyautogui.press("enter")
+elif "play a game" in query:
+game_play()
+elif "screenshot" in query:
+im = pyautogui.screenshot()
+im.save("ss.jpg")
+os.startfile("ss.jpg")
+elif "click my photo" in query:
+pyautogui.press("super")
+pyautogui.typewrite("camera")
+pyautogui.press("enter")
+pyautogui.sleep(15)
+speak("SMILE")
+pyautogui.press("enter")
